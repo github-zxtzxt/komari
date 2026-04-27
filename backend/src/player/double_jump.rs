@@ -147,7 +147,7 @@ pub fn update_double_jumping_state(
 
     match next_moving_lifecycle_with_axis(
         moving,
-        player.context.last_known_pos.expect("in positional state"),
+        player.context.effective_pos().expect("in positional state"),
         timeout,
         axis,
     ) {

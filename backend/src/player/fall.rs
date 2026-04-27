@@ -83,7 +83,7 @@ pub fn update_falling_state(
 
     match next_moving_lifecycle_with_axis(
         falling.moving,
-        player.context.last_known_pos.expect("in positional state"),
+        player.context.effective_pos().expect("in positional state"),
         TIMEOUT,
         ChangeAxis::Vertical,
     ) {

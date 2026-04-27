@@ -11,7 +11,7 @@ const TIMEOUT: u32 = MOVE_TIMEOUT + 3;
 pub fn update_jumping_state(resources: &mut Resources, player: &mut PlayerEntity, moving: Moving) {
     match next_moving_lifecycle_with_axis(
         moving,
-        player.context.last_known_pos.expect("in positional state"),
+        player.context.effective_pos().expect("in positional state"),
         TIMEOUT,
         ChangeAxis::Vertical,
     ) {

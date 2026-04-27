@@ -385,8 +385,16 @@ pub struct PlayerContext {
 
     /// Stores a list of [`(Point, u64)`] pair samples for approximating velocity.
     velocity_samples: Array<(Point, u64), VELOCITY_SAMPLES>,
-    /// Approximated player velocity.
+    /// Approximated player velocity (absolute values).
     pub(super) velocity: (f32, f32),
+    /// Signed velocity for latency-compensated position prediction.
+    signed_velocity: (f32, f32),
+    /// Position compensated for capture latency.
+    ///
+    /// When capture latency is configured, this position is extrapolated forward
+    /// from [`Self::last_known_pos`] using [`Self::signed_velocity`]. Movement states
+    /// should use this instead of [`Self::last_known_pos`] for position-dependent decisions.
+    pub predicted_pos: Option<Point>,
 
     /// The number of times [`Player::UsingBooster`] for Generic Booster failed.
     generic_booster_failed_count: u32,
@@ -417,6 +425,11 @@ impl PlayerContext {
     #[inline]
     pub fn name(&self) -> Option<String> {
         self.name.clone()
+    }
+
+    #[inline]
+    pub fn effective_pos(&self) -> Option<Point> {
+        self.predicted_pos.or(self.last_known_pos)
     }
 
     #[inline]
@@ -839,7 +852,7 @@ impl PlayerContext {
             Minimap::Idle(idle) => idle.bbox,
             Minimap::Detecting => return false,
         };
-        let pos = self.last_known_pos.expect("in positional state");
+        let pos = self.effective_pos().expect("in positional state");
         let name = self.name();
         let Update::Ok(points) = update_detection_task(
             resources,
@@ -939,7 +952,7 @@ impl PlayerContext {
             let bound_height_half = bound.height / 2;
             let bound_x_mid = bound.x + bound_width_half;
             let bound_y_mid = bound.y + bound_height_half;
-            let pos = self.last_known_pos.expect("inside positional context");
+            let pos = self.effective_pos().expect("inside positional context");
             let pos = Point::new(pos.x, bbox.height - pos.y);
             match (pos.x < bound_x_mid, pos.y < bound_y_mid) {
                 (true, true) => Quadrant::TopLeft,
@@ -1343,6 +1356,20 @@ impl PlayerContext {
         self.is_stationary = is_stationary;
         self.is_stationary_timeout = is_stationary_timeout;
         self.last_known_pos = Some(pos);
+
+        let latency = resources.capture_latency_ticks;
+        self.predicted_pos = if latency > 0 {
+            let lt = latency as f32;
+            let px = pos.x + (self.signed_velocity.0 * lt).round() as i32;
+            let py = pos.y + (self.signed_velocity.1 * lt).round() as i32;
+            Some(Point::new(
+                px.clamp(0, minimap_bbox.width),
+                py.clamp(0, minimap_bbox.height),
+            ))
+        } else {
+            Some(pos)
+        };
+
         true
     }
 
@@ -1385,6 +1412,13 @@ impl PlayerContext {
                 let smoothed_dy = 0.5 * avg_dy + 0.5 * self.velocity.1;
 
                 self.velocity = (smoothed_dx, smoothed_dy);
+
+                let signed_dx = weighted_sum.0 / total_weight;
+                let signed_dy = weighted_sum.1 / total_weight;
+                self.signed_velocity = (
+                    0.5 * signed_dx + 0.5 * self.signed_velocity.0,
+                    0.5 * signed_dy + 0.5 * self.signed_velocity.1,
+                );
             }
         }
     }

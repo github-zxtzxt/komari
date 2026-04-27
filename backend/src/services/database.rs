@@ -1,6 +1,7 @@
 use super::EventContext;
 use crate::{
-    DatabaseEvent, bridge::InputMethod, operation::OperationConfiguration, services::EventHandler,
+    DatabaseEvent, bridge::InputMethod, operation::OperationConfiguration, run::MS_PER_TICK_F32,
+    services::EventHandler,
 };
 
 pub struct DatabaseEventHandler;
@@ -22,6 +23,8 @@ impl EventHandler<DatabaseEvent> for DatabaseEventHandler {
                     .config(context.resources, OperationConfiguration::from(&settings));
                 context.rotator_service.update_from_settings(&settings);
                 context.rotator_service.apply(context.rotator);
+                context.resources.capture_latency_ticks =
+                    (settings.capture_latency_ms as f32 / MS_PER_TICK_F32).round() as u32;
 
                 update_capture_and_input(context);
             }

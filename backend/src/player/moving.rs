@@ -226,7 +226,7 @@ impl Moving {
             return false;
         }
 
-        let pos = context.last_known_pos.expect("in positional context");
+        let pos = context.effective_pos().expect("in positional context");
         let (x_distance, _) = self.x_distance_direction_from(true, pos);
         let (y_distance, y_direction) = self.y_distance_direction_from(true, pos);
 
@@ -274,7 +274,7 @@ pub fn update_moving_state(
         return;
     }
 
-    let cur_pos = context.last_known_pos.unwrap();
+    let cur_pos = context.effective_pos().unwrap();
     let moving = Moving::new(cur_pos, dest, exact, intermediates);
     let is_intermediate = moving.is_destination_intermediate();
     let skip_destination = moving.auto_mob_can_skip_current_destination(context);

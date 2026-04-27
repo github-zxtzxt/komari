@@ -58,7 +58,7 @@ fn update_from_action(
                 match minimap_state {
                     Minimap::Idle(idle) => find_intermediate_points(
                         &idle.platforms,
-                        context.last_known_pos.unwrap(),
+                        context.effective_pos().unwrap(),
                         point,
                         position.allow_adjusting,
                         context.config.auto_mob_platforms_pathing_up_jump_only,
@@ -117,7 +117,7 @@ fn update_from_action(
                 ..
             },
         )) => {
-            let last_pos = context.last_known_pos.unwrap();
+            let last_pos = context.effective_pos().unwrap();
             let last_direction = context.last_known_direction;
 
             player.state =
@@ -169,7 +169,7 @@ fn update_from_action(
 
             let intermediates = find_intermediate_points(
                 &idle.platforms,
-                context.last_known_pos.unwrap(),
+                context.effective_pos().unwrap(),
                 rune,
                 true,
                 context.config.rune_platforms_pathing_up_jump_only,
@@ -194,7 +194,7 @@ fn update_from_action(
         }
 
         Some(PlayerAction::PingPong(ping_pong)) => {
-            let last_pos = context.last_known_pos.unwrap();
+            let last_pos = context.effective_pos().unwrap();
             update_from_ping_pong_action(resources, player, minimap_state, ping_pong, last_pos)
         }
 

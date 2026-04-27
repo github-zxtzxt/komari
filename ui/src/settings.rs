@@ -127,6 +127,16 @@ fn SectionCapture() -> Element {
                     },
                     selected: settings().capture_mode,
                 }
+                SettingsMillisInput {
+                    label: "Capture latency",
+                    on_value: move |capture_latency_ms| {
+                        save_settings(Settings {
+                            capture_latency_ms,
+                            ..settings.peek().clone()
+                        });
+                    },
+                    value: settings().capture_latency_ms,
+                }
             }
             Button {
                 style: ButtonStyle::Secondary,

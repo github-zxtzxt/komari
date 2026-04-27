@@ -134,7 +134,7 @@ pub fn update_up_jumping_state(
         up_jumping.moving,
         player
             .context
-            .last_known_pos
+            .effective_pos()
             .expect("in positional context"),
         TIMEOUT,
         ChangeAxis::Vertical,

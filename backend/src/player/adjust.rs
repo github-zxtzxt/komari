@@ -80,7 +80,7 @@ pub fn update_adjusting_state(
         panic!("state is not adjusting")
     };
     let context = &mut player.context;
-    let cur_pos = context.last_known_pos.expect("in positional state");
+    let cur_pos = context.effective_pos().expect("in positional state");
 
     let moving = adjusting.moving;
     let is_intermediate = moving.is_destination_intermediate();

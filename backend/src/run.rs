@@ -101,6 +101,8 @@ fn systems_loop() {
             state: OperationState::Halting,
         },
         tick: 0,
+        capture_latency_ticks: (settings.borrow().capture_latency_ms as f32 / MS_PER_TICK_F32)
+            .round() as u32,
     };
 
     let minimap = MinimapEntity {

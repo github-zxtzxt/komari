@@ -34,6 +34,8 @@ pub struct Settings {
     pub platform_end_key: KeyBindingConfiguration,
     #[serde(default = "platform_add_key_default")]
     pub platform_add_key: KeyBindingConfiguration,
+    #[serde(default)]
+    pub capture_latency_ms: u64,
 }
 
 impl Default for Settings {
@@ -56,6 +58,7 @@ impl Default for Settings {
             platform_start_key: platform_start_key_default(),
             platform_end_key: platform_end_key_default(),
             platform_add_key: platform_add_key_default(),
+            capture_latency_ms: 0,
         }
     }
 }

@@ -73,7 +73,7 @@ pub fn update_grappling_state(
 
     match next_moving_lifecycle_with_axis(
         grappling.moving,
-        player.context.last_known_pos.expect("in positional state"),
+        player.context.effective_pos().expect("in positional state"),
         timeout,
         ChangeAxis::Both,
     ) {

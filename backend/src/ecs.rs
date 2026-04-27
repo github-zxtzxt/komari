@@ -96,6 +96,8 @@ pub struct Resources {
     pub operation: Operation,
     /// A resource indicating current tick.
     pub tick: u64,
+    /// Capture latency in ticks for position prediction.
+    pub capture_latency_ticks: u32,
 }
 
 impl Resources {
@@ -120,6 +122,7 @@ impl Resources {
                 state: OperationState::Running,
             },
             tick: 0,
+            capture_latency_ticks: 0,
         }
     }
 
