@@ -302,10 +302,14 @@ pub fn update_moving_state(
         );
     }
 
+    // Relax the X threshold for rune destinations since precise horizontal alignment
+    // isn't required to interact with the rune.
+    let x_threshold_offset = if context.is_rune_destination { 5 } else { 0 };
+
     // Check to adjust and allow disabling adjusting only if `exact` is false
     if !skip_destination
-        && ((!disable_adjusting && x_distance >= ADJUSTING_MEDIUM_THRESHOLD)
-            || (exact && x_distance >= ADJUSTING_SHORT_THRESHOLD))
+        && ((!disable_adjusting && x_distance >= ADJUSTING_MEDIUM_THRESHOLD + x_threshold_offset)
+            || (exact && x_distance >= ADJUSTING_SHORT_THRESHOLD + x_threshold_offset))
     {
         return abort_action_on_state_repeat(
             player,
@@ -465,6 +469,7 @@ fn update_from_action(player: &mut PlayerEntity, moving: Moving) {
         }
 
         Some(PlayerAction::SolveRune) => {
+            player.context.is_rune_destination = false;
             player.state = Player::SolvingRune(SolvingRune::default());
         }
 
