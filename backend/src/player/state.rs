@@ -366,6 +366,8 @@ pub struct PlayerContext {
     rune_failed_count: u32,
     /// Indicates the state will be transitioned to [`Player::CashShopThenExit`] in the next tick.
     pub(super) rune_cash_shop: bool,
+    /// Whether the current destination is a rune, for relaxed X threshold.
+    pub(super) is_rune_destination: bool,
     /// [`Timeout`] for validating whether the rune is solved.
     ///
     /// This is [`Some`] when [`Player::SolvingRune`] successfully detects the rune
@@ -607,6 +609,7 @@ impl PlayerContext {
     /// Clears either normal or priority due to completion.
     #[inline]
     pub(super) fn clear_action_completed(&mut self) {
+        self.is_rune_destination = false;
         self.clear_last_movement();
         if self.has_priority_action() {
             self.priority_action = None;

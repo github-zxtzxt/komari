@@ -159,6 +159,7 @@ fn update_from_action(
             };
 
             context.last_destinations = Some(vec![rune]);
+            context.is_rune_destination = true;
             if !context.config.rune_platforms_pathing {
                 player.state = Player::Moving(rune, false, None);
                 return;
