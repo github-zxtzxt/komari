@@ -60,6 +60,27 @@ pub fn ActionConfigurationsList(
     let mut popup_content = use_signal(|| PopupContent::None);
     let mut popup_open = use_signal(|| false);
 
+    let actions_clone = actions.clone();
+    let default_condition = use_memo(move || {
+        match popup_content() {
+            PopupContent::Edit { action, index } => {
+                if matches!(action.condition, ActionConfigurationCondition::Linked) {
+                    actions_clone[..index].iter().rev()
+                        .find_map(|a| match a.condition {
+                            ActionConfigurationCondition::EveryMillis(_) => {
+                                Some(ActionConfigurationCondition::EveryMillis(0))
+                            }
+                            _ => None,
+                        })
+                        .unwrap_or(ActionConfigurationCondition::EveryMillis(0))
+                } else {
+                    action.condition
+                }
+            }
+            _ => ActionConfigurationCondition::default(),
+        }
+    });
+
     rsx! {
         PopupContext {
             open: popup_open,
@@ -129,8 +150,9 @@ pub fn ActionConfigurationsList(
                 modifying: matches!(popup_content(), PopupContent::Edit { .. }),
                 can_create_linked_action: match popup_content() {
                     PopupContent::None | PopupContent::Add(_) => false,
-                    PopupContent::Edit { index, .. } => index != 0,
+                    PopupContent::Edit { index, .. } => index > 0,
                 },
+                default_condition: default_condition(),
                 on_copy: move |_| {
                     let content = popup_content.peek().clone();
                     match content {
@@ -285,6 +307,7 @@ fn Item(action: ActionConfiguration) -> Element {
 fn PopupActionConfigurationContent(
     modifying: bool,
     can_create_linked_action: bool,
+    default_condition: ActionConfigurationCondition,
     on_copy: Callback,
     on_cancel: Callback,
     on_value: Callback<ActionConfiguration>,
@@ -301,6 +324,7 @@ fn PopupActionConfigurationContent(
             ActionConfigurationInput {
                 modifying,
                 can_create_linked_action,
+                default_condition,
                 on_copy,
                 on_cancel,
                 on_value,
@@ -314,6 +338,7 @@ fn PopupActionConfigurationContent(
 fn ActionConfigurationInput(
     modifying: bool,
     can_create_linked_action: bool,
+    default_condition: ActionConfigurationCondition,
     on_copy: Callback,
     on_cancel: Callback,
     on_value: Callback<ActionConfiguration>,
@@ -408,6 +433,8 @@ fn ActionConfigurationInput(
                         let mut action = action.write();
                         action.condition = if is_linked {
                             ActionConfigurationCondition::Linked
+                        } else if matches!(value.peek().condition, ActionConfigurationCondition::Linked) {
+                            default_condition
                         } else {
                             value.peek().condition
                         };

@@ -302,6 +302,7 @@ pub fn PopupMobbingKeyInputContent(
                 switchable: false,
                 modifying: true,
                 linkable: false,
+                default_condition: ActionCondition::Any,
                 positionable: false,
                 directionable: false,
                 bufferable: false,
@@ -337,6 +338,7 @@ pub fn PopupMobbingKeyInputContent(
 pub fn PopupActionsInputContent(
     modifying: bool,
     linkable: bool,
+    default_condition: ActionCondition,
     on_copy: Option<Callback>,
     on_cancel: Callback,
     on_value: Callback<(Action, ActionCondition)>,
@@ -360,6 +362,7 @@ pub fn PopupActionsInputContent(
                 switchable: true,
                 modifying,
                 linkable,
+                default_condition,
                 positionable: true,
                 directionable: true,
                 bufferable: true,

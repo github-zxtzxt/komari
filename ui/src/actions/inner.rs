@@ -45,6 +45,19 @@ fn find_linked_action_range(actions: &[Action], action_index: usize) -> Option<R
     Some(start..end)
 }
 
+/// Finds the parent action's condition for a linked action at `index`.
+/// Walks backwards to find the nearest preceding non-linked action.
+fn find_parent_condition(actions: &[Action], index: usize) -> Option<ActionCondition> {
+    for i in (0..index).rev() {
+        match actions[i].condition() {
+            ActionCondition::Linked => continue,
+            ActionCondition::EveryMillis(_) => return Some(ActionCondition::EveryMillis(0)),
+            condition => return Some(condition),
+        }
+    }
+    None
+}
+
 /// Finds the last linked action index of the last action matching `condition`.
 fn find_last_linked_action_index(actions: &[Action], condition: ActionCondition) -> Option<usize> {
     let condition_filter = discriminant(&condition);
@@ -292,6 +305,7 @@ pub fn SectionActions(actions: Memo<Vec<Action>>, disabled: bool) -> Element {
                     PopupActionsInputContent {
                         modifying: false,
                         linkable: !filter_actions(actions(), action.condition()).is_empty(),
+                        default_condition: action.condition(),
                         on_cancel: move |_| {
                             popup_open.set(false);
                             popup_content.set(PopupContent::None);
@@ -308,11 +322,13 @@ pub fn SectionActions(actions: Memo<Vec<Action>>, disabled: bool) -> Element {
                 PopupContent::Edit { action, index } => rsx! {
                     PopupActionsInputContent {
                         modifying: true,
-                        linkable: filter_actions(actions(), action.condition())
-                            .into_iter()
-                            .next()
-                            .map(|first| first.1 != index)
-                            .unwrap_or_default(),
+                        linkable: index > 0
+                            && actions()
+                                .iter()
+                                .take(index)
+                                .any(|a| !matches!(a.condition(), ActionCondition::Linked)),
+                        default_condition: find_parent_condition(&actions(), index)
+                            .unwrap_or(action.condition()),
                         on_copy: move |_| {
                             popup_content.set(PopupContent::Add(action));
                         },

@@ -83,6 +83,7 @@ pub fn ActionsInput(
     switchable: bool,
     modifying: bool,
     linkable: bool,
+    default_condition: ActionCondition,
     positionable: bool,
     directionable: bool,
     bufferable: bool,
@@ -160,6 +161,7 @@ pub fn ActionsInput(
                     ActionsMoveInput {
                         modifying,
                         linkable,
+                        default_condition,
                         on_cancel,
                         on_value: move |(action, condition)| {
                             on_value((Action::Move(action), condition));
@@ -171,6 +173,7 @@ pub fn ActionsInput(
                     ActionsKeyInput {
                         modifying,
                         linkable,
+                        default_condition,
                         positionable,
                         directionable,
                         bufferable,
@@ -190,6 +193,7 @@ pub fn ActionsInput(
 fn ActionsMoveInput(
     modifying: bool,
     linkable: bool,
+    default_condition: ActionCondition,
     on_cancel: Callback,
     on_value: Callback<(ActionMove, ActionCondition)>,
     value: ReadSignal<ActionMove>,
@@ -268,6 +272,8 @@ fn ActionsMoveInput(
                         let mut action = current_value.write();
                         action.condition = if is_linked {
                             ActionCondition::Linked
+                        } else if matches!(value_condition, ActionCondition::Linked) {
+                            default_condition
                         } else {
                             value_condition
                         };
@@ -307,6 +313,7 @@ fn ActionsMoveInput(
 fn ActionsKeyInput(
     modifying: ReadSignal<bool>,
     linkable: ReadSignal<bool>,
+    default_condition: ActionCondition,
     positionable: ReadSignal<bool>,
     directionable: ReadSignal<bool>,
     bufferable: ReadSignal<bool>,
@@ -399,6 +406,8 @@ fn ActionsKeyInput(
                         let mut action = current_value.write();
                         action.condition = if is_linked {
                             ActionCondition::Linked
+                        } else if matches!(value_condition, ActionCondition::Linked) {
+                            default_condition
                         } else {
                             value_condition
                         };
@@ -445,7 +454,7 @@ fn ActionsKeyInput(
                         let mut action = current_value.write();
                         action.queue_to_front = Some(queue_to_front);
                     },
-                    checked: current_value().queue_to_front.is_some(),
+                    checked: current_value().queue_to_front.unwrap_or(false),
                 }
             } else {
                 div {} // Spacer
